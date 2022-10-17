@@ -1,54 +1,36 @@
-import pdfkit
-from jinja2 import Environment, PackageLoader, select_autoescape, FileSystemLoader
-from datetime import date
 import streamlit as st
-from streamlit.components.v1 import iframe
-
-st.set_page_config(layout="centered", page_icon="🎓", page_title="Diploma Generator")
-st.title("🎓 Diploma PDF Generator")
-
-st.write(
-    "This app shows you how you can use Streamlit to make a PDF generator app in just a few lines of code!"
-)
-
-left, right = st.columns(2)
-
-right.write("Here's the template we'll be using:")
-
-right.image("template.png", width=300)
-
-env = Environment(loader=FileSystemLoader("."), autoescape=select_autoescape())
-template = env.get_template("template.html")
 
 
-left.write("Fill in the data:")
-form = left.form("template_form")
-student = form.text_input("Student name")
-course = form.selectbox(
-    "Choose course",
-    ["Report Generation in Streamlit", "Advanced Cryptography"],
-    index=0,
-)
-grade = form.slider("Grade", 1, 100, 60)
-submit = form.form_submit_button("Generate PDF")
+if 'num' not in st.session_state:
+    st.session_state.num = 0
 
-if submit:
-    html = template.render(
-        student=student,
-        course=course,
-        grade=f"{grade}/100",
-        date=date.today().strftime("%B %d, %Y"),
-    )
 
-    pdf = pdfkit.from_string(html, False)
-    st.balloons()
+choices1 = ['no answer', 'manila', 'tokyo', 'bangkok']
+choices2 = ['no answer', 'thailand', 'japan', 'philippines']
 
-    right.success("🎉 Your diploma was generated!")
-    # st.write(html, unsafe_allow_html=True)
-    # st.write("")
-    right.download_button(
-        "⬇️ Download PDF",
-        data=pdf,
-        file_name="diploma.pdf",
-        mime="application/octet-stream",
-    )
+qs1 = [('What is the capital of Japan', choices1),
+    ('What is the capital of Philippines', choices1),
+    ('What is the capital of Thailand', choices1)]
+qs2 = [('What country has the highest life expectancy?', choices2),
+    ('What country has the highest population?', choices2),
+    ('What country has the highest oil deposits?', choices2)]
+
+
+def main():
+    for _, _ in zip(qs1, qs2): 
+        placeholder = st.empty()
+        num = st.session_state.num
+        with placeholder.form(key=str(num)):
+            st.radio(qs1[num][0], key=num+1, options=qs1[num][1])
+            st.radio(qs2[num][0], key=num+1, options=qs2[num][1])          
+                      
+            if st.form_submit_button():
+                st.session_state.num += 1
+                if st.session_state.num >= 3:
+                    st.session_state.num = 0 
+                placeholder.empty()
+            else:
+                st.stop()
+
+
+main()
